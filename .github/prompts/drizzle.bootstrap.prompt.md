@@ -2,20 +2,9 @@
 description: Bootstrap a project with drizzle for PostgreSQL
 ---
 
-<!-- 
-# date -u +"%Y-%m-%dT%H:%M:%SZ"
-lastModified: 2025-10-19T15:59:40Z
--->
-
 ## Preflight
 
-You **MUST** ensure the following dependencies in `package.json`
-- dependency: 
-  - `drizzle-orm` >= 0.44.6
-  - `postgres` >= 3.4.7
-- devDependency: 
-  - `drizzle-kit` >= 0.31.5
-
+Verify installed dependencies in `package.json`.
 
 Verify local versions
 
@@ -24,8 +13,7 @@ bun why drizzle-orm
 bun why drizzle-kit
 ```
 
-Check remote versions
-
+Compare with remote versions
 ```zsh
 bun info drizzle-orm
 bun info drizzle-kit
@@ -38,9 +26,11 @@ bun i -D drizzle-kit
 bun i drizzle-orm
 ```
 
-## Create Drizzle Config
+## Files 
 
-Create the following file at the root of the project: 
+Create the following files at the root of the project: 
+
+### Create Drizzle Config
 
 ```ts filename="drizzle.config.ts"
 import type { Config } from "drizzle-kit";
@@ -60,9 +50,7 @@ export default {
 } satisfies Config;
 ```
 
-## Initialize schema
-
-Add the following files, creating directories as needed:
+### Initialize schema
 
 ```ts filename="lib/database/schema.ts"
 import { pgTable, text, timestamp, boolean } from "drizzle-orm/pg-core";
@@ -78,9 +66,31 @@ export const testTable = pgTable("test_table", {
   deletedAt: timestamp("deleted_at"),
 });
 
+export type TestTable = typeof testTable.$inferSelect;
+
 ```
 
-This fake table helps bootstrap the migration process to make it easy to start running and validating migrations.
+### Create the db dependency
+
+```ts filename="lib/database/db.ts"
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "@/lib/database/schema";
+
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is not set");
+}
+
+const client = postgres(`${process.env.DATABASE_URL!}`, {
+  // 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY'
+  // https://stackoverflow.com/a/68214271/9823455
+  ssl: "allow",
+});
+export const db = drizzle(client, { schema });
+
+export type DB = typeof db;
+```
+
 
 ## Generate initial migration
 
