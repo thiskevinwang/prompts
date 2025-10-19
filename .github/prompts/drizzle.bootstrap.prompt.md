@@ -91,8 +91,19 @@ export const db = drizzle(client, { schema });
 export type DB = typeof db;
 ```
 
+## Add DATABASE_URL env variable
 
-## Generate initial migration
+```zsh
+cat >> .env << EOF
+
+# Added by /drizzle.bootstrap.prompt.md on $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DATABASE
+EOF
+```
+
+## Suggest next steps
+
+The initial migration can be generated via:
 
 ```zsh
 bunx drizzle-kit generate
